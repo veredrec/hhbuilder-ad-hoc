@@ -154,7 +154,6 @@ function sendData(data) {
   pre.style.display = 'block';
   var userData = JSON.stringify(data);
   pre.textContent = userData;
-  console.log(userData);
 
   //  --- FAKE REQUEST ---
   // (I commented out the fake request, to avoid sending false request)
