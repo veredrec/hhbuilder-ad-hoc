@@ -6,7 +6,7 @@ var messageAge = document.createTextNode('h3');
 var messageRel = document.createTextNode('h3');
 document.getElementsByTagName('body')[0].appendChild(messageSection);
 
-var applicants = []; // array to hold applicants details
+var applicants = []; // array to hold multiple applicants' details
 
 // --- ADD APPLICANT ---
 
@@ -116,7 +116,6 @@ function displayInput(applicants) {
     userSection.appendChild(userRel);
     userSmoke.textContent = 'Smoker: ' + applicant.smoke;
     userSection.appendChild(userSmoke);
-    // remove button with event function for removing specific applicant
     var removeButton = document.createElement('button');
     userSection.appendChild(removeButton);
     removeButton.textContent = 'Remove Applicant';
@@ -143,28 +142,33 @@ function removeApplicant(applicants, idToRemove) {
   return filteredApplicants;
 }
 
-// --- POPULATE PRE ELEMENT ---
+// --- POPULATE PRE ELEMENT AND SEND DATA AS A FAKE TRIP TO SERVER ---
 form.addEventListener('submit', function(e) {
   e.preventDefault();
-  var pre = document.getElementsByTagName('pre')[0];
-  pre.setAttribute('display', 'block');
-  var userData = JSON.stringify(applicants);
-  pre.innerText = userData;
-  sendData(userData);
+  sendData(applicants);
 });
 
-// --- SEND DATA AS A FAKE TRIP TO SERVER ---
 function sendData(data) {
-  form.setAttribute('method', 'post');
-  form.setAttribute('action', '/addData');
-  var xhr = new XMLHttpRequest();
-  var url = '/addData';
-  xhr.setRequestHeader('Content-type', 'application/json');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-      var json = JSON.parse(xhr.responseText);
-    }
-  };
-  xhr.open('POST', url, true);
-  xhr.send(userData);
+  var pre = document.getElementsByTagName('pre')[0];
+  pre.textContent = '';
+  pre.style.display = 'block';
+  var userData = JSON.stringify(data);
+  pre.textContent = userData;
+  console.log(userData);
+
+  //  --- FAKE REQUEST ---
+  // (I commented out the fake request, to avoid sending false request)
+
+  // form.setAttribute('method', 'post');
+  // form.setAttribute('action', '/addData');
+  // var xhr = new XMLHttpRequest();
+  // var url = '/addData';
+  // xhr.setRequestHeader('Content-type', 'application/json');
+  // xhr.onreadystatechange = function() {
+  //   if (xhr.readyState === 4 && xhr.status === 200) {
+  //     var json = JSON.parse(xhr.responseText);
+  //   }
+  // };
+  // xhr.open('POST', url, true);
+  // xhr.send(userData);
 }
