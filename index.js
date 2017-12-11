@@ -2,19 +2,39 @@ var form = document.getElementsByTagName('form')[0];
 var submit = document.getElementsByTagName('button')[1];
 var add = document.getElementsByTagName('button')[0];
 var messageSection = document.createElement('div');
-document.getElementsByTagName('body')[0].appendChild(messageSection);
 var messageAge = document.createTextNode('h3');
 var messageRel = document.createTextNode('h3');
+document.getElementsByTagName('body')[0].appendChild(messageSection);
 
-// generate id to allow remove of specific applicant
+var applicants = []; // array to hold multiple applicants' details
+
+// --- ADD APPLICANT ---
+
+// generate id for each applicant input, to remove specific applicant
 var idCounter = 0;
-var generateId = function() {
+function generateId() {
   return idCounter++;
-};
+}
 
-var applicants = []; // array to hold applicants details
+add.addEventListener('click', function(e) {
+  e.preventDefault();
+  var age = document.getElementsByTagName('input')[0].value;
+  var rel = document.getElementsByTagName('select')[0].value;
+  var smoke = document.getElementsByTagName('input')[1].checked;
 
-// VERIFY INPUT
+  messageAge.textContent = '';
+  messageRel.textContent = '';
+
+  var applicantInput = {}; // object to hold applicant's details
+
+  addForm(applicantInput, age, rel, smoke); // send input to verify and store
+
+  document.getElementsByTagName('input')[0].value = ''; // empty form
+  document.getElementsByTagName('select')[0].value = '';
+  document.getElementsByTagName('input')[1].checked = false;
+});
+
+// --- VERIFY INPUT ---
 function createMessageAge(message) {
   messageAge.textContent = message;
   messageSection.appendChild(messageAge);
@@ -57,46 +77,26 @@ function isSmoker(smoke) {
   }
 }
 
-// ADD APPLICANT
-add.addEventListener('click', function(e) {
-  e.preventDefault();
-  var age = document.getElementsByTagName('input')[0].value;
-  var rel = document.getElementsByTagName('select')[0].value;
-  var smoke = document.getElementsByTagName('input')[1].checked;
-
-  messageAge.textContent = '';
-  messageRel.textContent = '';
-
-  var applicantInput = {}; // object to hold applicant's details
-
-  addForm(applicantInput, age, rel, smoke);
-});
-
-form.addEventListener('submit', function(e) {
-  e.preventDefault();
-  console.log(applicants);
-  sendData(applicants); // send data to fake trip as JSON
-});
-
+// --- ADD INPUT ---
 function addForm(applicantInput, age, rel, smoke) {
-    var ageSubmit = verifyAge(age);
-    var relSubmit = verifyRel(rel);
-    var smokerSubmit = isSmoker(smoke);
-    submit.disabled = false;
-    add.disabled = false;
+  var ageSubmit = verifyAge(age);
+  var relSubmit = verifyRel(rel);
+  var smokerSubmit = isSmoker(smoke);
+  submit.disabled = false;
+  add.disabled = false;
 
-    applicantInput.id = generateId();
-    applicantInput.age = ageSubmit;
-    applicantInput.rel = relSubmit;
-    applicantInput.smoke = smokerSubmit;
+  applicantInput.id = generateId();
+  applicantInput.age = ageSubmit;
+  applicantInput.rel = relSubmit;
+  applicantInput.smoke = smokerSubmit;
 
-    if (applicantInput.age !== undefined && applicantInput.rel !== undefined) {
-      applicants.push(applicantInput);
-      displayInput(applicants); // display applicants on the page
-    }
+  if (applicantInput.age !== undefined && applicantInput.rel !== undefined) {
+    applicants.push(applicantInput);
+    displayInput(applicants); // display applicants on the page
+  }
 }
 
-// DISPLAY USER INPUT
+// --- DISPLAY USER INPUT ---
 var userSection = document.createElement('div');
 function displayInput(applicants) {
   while (userSection.hasChildNodes()) {
@@ -116,7 +116,6 @@ function displayInput(applicants) {
     userSection.appendChild(userRel);
     userSmoke.textContent = 'Smoker: ' + applicant.smoke;
     userSection.appendChild(userSmoke);
-    // remove button with event function for removing specific applicant
     var removeButton = document.createElement('button');
     userSection.appendChild(removeButton);
     removeButton.textContent = 'Remove Applicant';
@@ -128,38 +127,47 @@ function displayInput(applicants) {
     userSection.appendChild(newLine);
   });
   document.getElementsByTagName('body')[0].appendChild(userSection);
-};
+}
 
-var update = function(newApplicants) {
+function update(newApplicants) {
   applicants = newApplicants;
   displayInput(applicants);
-};
+}
 
-// REMOVE APPLICANT
-var removeApplicant = function(applicants, idToRemove) {
-  var filteredApplicants = applicants.filter(function(applicantInput){
-      return applicantInput.id !== idToRemove;
+// --- REMOVE APPLICANT ---
+function removeApplicant(applicants, idToRemove) {
+  var filteredApplicants = applicants.filter(function(applicantInput) {
+    return applicantInput.id !== idToRemove;
   });
   return filteredApplicants;
 }
 
-// SEND DATA TO SERVER
+// --- POPULATE PRE ELEMENT AND SEND DATA AS A FAKE TRIP TO SERVER ---
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  sendData(applicants);
+});
+
 function sendData(data) {
-  var submitSection = document.getElementsByClassName('debug')[0];
-  submitSection.setAttribute('display', 'block');
+  var pre = document.getElementsByTagName('pre')[0];
+  pre.textContent = '';
+  pre.style.display = 'block';
   var userData = JSON.stringify(data);
-  submitSection.appendChild(userData);
-};
+  pre.textContent = userData;
+
+  //  --- FAKE REQUEST ---
+  // (I commented out the fake request, to avoid sending false request)
 
   // form.setAttribute('method', 'post');
   // form.setAttribute('action', '/addData');
   // var xhr = new XMLHttpRequest();
-  // var url = "/addData";
-  // xhr.open("POST", url, true);
-  // xhr.setRequestHeader("Content-type", "application/json");
-  // xhr.onreadystatechange = function () {
-  //     if (xhr.readyState === 4 && xhr.status === 200) {
-  //         var json = JSON.parse(xhr.responseText);
-  //     }
-  // }
+  // var url = '/addData';
+  // xhr.setRequestHeader('Content-type', 'application/json');
+  // xhr.onreadystatechange = function() {
+  //   if (xhr.readyState === 4 && xhr.status === 200) {
+  //     var json = JSON.parse(xhr.responseText);
+  //   }
+  // };
+  // xhr.open('POST', url, true);
   // xhr.send(userData);
+}
