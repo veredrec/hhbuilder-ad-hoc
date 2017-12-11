@@ -1,14 +1,3 @@
-// when submit form
-// checks age + message
-// checks rel + message
-// checks smoker
-// if everything is good - store in object
-// pushed to array
-// remove previous displayed items
-// displayes all items
-// add will start process over
-// remove will delete specific item from array
-
 var form = document.getElementsByTagName('form')[0];
 var submit = document.getElementsByTagName('button')[1];
 var add = document.getElementsByTagName('button')[0];
@@ -17,6 +6,13 @@ document.getElementsByTagName('body')[0].appendChild(messageSection);
 var messageAge = document.createTextNode('h3');
 var messageRel = document.createTextNode('h3');
 
+// generate id to allow remove of specific applicant
+var idCounter = 0;
+var generateId = function() {
+  return idCounter++;
+};
+
+var applicants = []; // array to hold applicants details
 
 // VERIFY INPUT
 function createMessageAge(message) {
@@ -34,8 +30,6 @@ var messages = {
   reqAge: ' - Age field is required.',
   reqRel: ' - Relationship field is required.'
 };
-
-var applicants = [];
 
 function verifyAge(age) {
   if (age.trim() === '') {
@@ -63,54 +57,57 @@ function isSmoker(smoke) {
   }
 }
 
-// SUBMIT EVENT
-form.addEventListener('submit', function(event) {
-  event.preventDefault();
-  add.disabled = true;
-
-  var formValues = event.target.elements;
-  var age = formValues.age.value;
-  var rel = formValues.rel.value;
-  var smoke = formValues.smoker.checked;
-
-  var applicantInput = {
-  };
+// ADD APPLICANT
+add.addEventListener('click', function(e) {
+  e.preventDefault();
+  var age = document.getElementsByTagName('input')[0].value;
+  var rel = document.getElementsByTagName('select')[0].value;
+  var smoke = document.getElementsByTagName('input')[1].checked;
 
   messageAge.textContent = '';
   messageRel.textContent = '';
 
-  submitForm(applicantInput, age, rel, smoke);
+  var applicantInput = {}; // object to hold applicant's details
+
+  addForm(applicantInput, age, rel, smoke);
 });
 
-function submitForm(applicantCurrentInput, age, rel, smoke) {
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  console.log(applicants);
+  sendData(applicants); // send data to fake trip as JSON
+});
+
+function addForm(applicantInput, age, rel, smoke) {
     var ageSubmit = verifyAge(age);
     var relSubmit = verifyRel(rel);
     var smokerSubmit = isSmoker(smoke);
-    submit.disabled = true;
+    submit.disabled = false;
     add.disabled = false;
 
-    var applicantSubmit = {
-      age: ageSubmit,
-      rel: relSubmit,
-      smoke: smokerSubmit
-    }
+    applicantInput.id = generateId();
+    applicantInput.age = ageSubmit;
+    applicantInput.rel = relSubmit;
+    applicantInput.smoke = smokerSubmit;
 
-    applicants.push(applicantSubmit);
-    displayInput(applicants);
+    if (applicantInput.age !== undefined && applicantInput.rel !== undefined) {
+      applicants.push(applicantInput);
+      displayInput(applicants); // display applicants on the page
+    }
 }
 
 // DISPLAY USER INPUT
-var userSection = document.createElement('ul');
+var userSection = document.createElement('div');
 function displayInput(applicants) {
   while (userSection.hasChildNodes()) {
     userSection.removeChild(userSection.lastChild);
   }
   applicants.forEach(function(applicant) {
-    var userTitle = document.createTextNode('li');
-    var userAge = document.createElement('li');
-    var userRel = document.createElement('li');
-    var userSmoke = document.createElement('li');
-    console.log(applicant);
+    // create elements to display applicant's data
+    var userTitle = document.createTextNode('h2');
+    var userAge = document.createElement('p');
+    var userRel = document.createElement('p');
+    var userSmoke = document.createElement('p');
     userTitle.textContent = 'Applicant Details: ';
     userSection.appendChild(userTitle);
     userAge.textContent = 'Age: ' + applicant.age;
@@ -119,31 +116,50 @@ function displayInput(applicants) {
     userSection.appendChild(userRel);
     userSmoke.textContent = 'Smoker: ' + applicant.smoke;
     userSection.appendChild(userSmoke);
-    var button = document.createElement('button');
-    button.setAttribute('id', 'remove');
-    button.setAttribute('onclick', 'removeApplicant()');
-    userSection.appendChild(button);
-    button.textContent = 'Remove Applicant';
+    // remove button with event function for removing specific applicant
+    var removeButton = document.createElement('button');
+    userSection.appendChild(removeButton);
+    removeButton.textContent = 'Remove Applicant';
+    removeButton.addEventListener('click', function() {
+      var newApplicants = removeApplicant(applicants, applicant.id);
+      update(newApplicants);
+    });
+    var newLine = document.createElement('br');
+    userSection.appendChild(newLine);
   });
   document.getElementsByTagName('body')[0].appendChild(userSection);
+};
+
+var update = function(newApplicants) {
+  applicants = newApplicants;
+  displayInput(applicants);
+};
+
+// REMOVE APPLICANT
+var removeApplicant = function(applicants, idToRemove) {
+  var filteredApplicants = applicants.filter(function(applicantInput){
+      return applicantInput.id !== idToRemove;
+  });
+  return filteredApplicants;
 }
 
-  // REMOVE APPLICANT
+// SEND DATA TO SERVER
+function sendData(data) {
+  var submitSection = document.getElementsByClassName('debug')[0];
+  submitSection.setAttribute('display', 'block');
+  var userData = JSON.stringify(data);
+  submitSection.appendChild(userData);
+};
 
-  function removeApplicant() {
-    this.parentNode.removeChild(this); // not the right way to remove
-  };
-
-// ADD APPLICANT
-add.addEventListener('click', function() {
-  event.preventDefault();
-  submit.disabled = false;
-  add.disabled = true;
-});
-
-
-// PROBLEMS:
-// even when can't submit form, displays the previous object again
-// remove applicant doesn't work
-
-// TODO send JSON at the end as fake trip to server
+  // form.setAttribute('method', 'post');
+  // form.setAttribute('action', '/addData');
+  // var xhr = new XMLHttpRequest();
+  // var url = "/addData";
+  // xhr.open("POST", url, true);
+  // xhr.setRequestHeader("Content-type", "application/json");
+  // xhr.onreadystatechange = function () {
+  //     if (xhr.readyState === 4 && xhr.status === 200) {
+  //         var json = JSON.parse(xhr.responseText);
+  //     }
+  // }
+  // xhr.send(userData);
